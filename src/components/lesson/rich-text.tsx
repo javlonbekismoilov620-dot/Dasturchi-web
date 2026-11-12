@@ -14,7 +14,7 @@ function inline(text: string, keyBase: string): ReactNode[] {
     if (m.index > last) out.push(text.slice(last, m.index));
     const tok = m[0];
     const k = `${keyBase}-${i++}`;
-    if (tok.startsWith("`")) out.push(<code key={k}>{tok.slice(1, -1)}</code>);
+    if (tok.startsWith("`")) out.push(<code key={k} className="inline-code">{tok.slice(1, -1)}</code>);
     else if (tok.startsWith("**")) out.push(<strong key={k}>{tok.slice(2, -2)}</strong>);
     else out.push(<em key={k}>{tok.slice(1, -1)}</em>);
     last = m.index + tok.length;

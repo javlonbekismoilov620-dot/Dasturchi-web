@@ -62,12 +62,12 @@ export function LightingLab() {
     let alive = true;
     (async () => {
       const { createViewport } = await import("./three-viewport");
-      const vp = await createViewport(mount, { cameraPos: [0, 1.4, 6.2], target: [0, 0.6, 0], shadows: true });
+      const vp = await createViewport(mount, { cameraPos: [0.8, 1.9, 7.8], target: [0.5, 0.9, 0], shadows: true });
       if (!alive) return vp.dispose();
       const { THREE, scene } = vp;
       scene.background = new THREE.Color("#0d0d10");
       vp.controls.minDistance = 3.5;
-      vp.controls.maxDistance = 10;
+      vp.controls.maxDistance = 12;
 
       const floor = new THREE.Mesh(new THREE.CircleGeometry(8, 64), new THREE.MeshStandardMaterial({ color: 0x3a3a40, roughness: 0.9 }));
       floor.rotation.x = -Math.PI / 2;
@@ -155,7 +155,7 @@ export function LightingLab() {
             {PRESETS[preset].hint}
           </p>
         </div>
-        <div className="space-y-5 border-t border-border p-4 lg:border-l lg:border-t-0">
+        <div className="space-y-5 border-t border-border p-4 lg:max-h-[420px] lg:overflow-y-auto lg:border-l lg:border-t-0">
           {(
             [
               ["key", "Asosiy (Key)"],

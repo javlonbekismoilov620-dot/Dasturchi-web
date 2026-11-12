@@ -220,7 +220,7 @@ export function MeshViewer({ initialShape = "cube", compact }: { initialShape?: 
             <div>Qirralar: {edges.length}</div>
             <div>Yuzlar: {mesh.faces.length}</div>
           </div>
-          <p className="pointer-events-none absolute bottom-3 right-3 hidden rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/80 sm:block">
+          <p className="pointer-events-none absolute right-3 top-3 hidden rounded-md bg-black/40 px-2 py-1 text-[11px] text-white/80 md:block">
             Sichqoncha bilan aylantiring · g‘ildirak bilan yaqinlashtiring
           </p>
         </div>

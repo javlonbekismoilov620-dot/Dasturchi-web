@@ -226,7 +226,7 @@ export const webAsoslari: CourseSeed = {
               },
               {
                 title: "charset'ni ko'rsatmaslik",
-                fix: "`<meta charset=\"UTF-8\">` bo'lmasa, o'zbekcha harflar (o', g', sh) buzilib ko'rinishi mumkin. Uni har doim `<head>` boshiga yozing.",
+                fix: "`<meta charset=\"UTF-8\">` bo'lmasa, o'zbekcha harflar (o‘, g‘ va tutuq belgisi) buzilib ko'rinishi mumkin. Uni har doim `<head>` boshiga yozing.",
               },
               {
                 title: "Faylni .txt sifatida saqlash",

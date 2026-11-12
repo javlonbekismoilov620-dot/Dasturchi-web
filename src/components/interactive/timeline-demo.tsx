@@ -126,7 +126,7 @@ export function TimelineDemo() {
     if (e.key === " ") {
       e.preventDefault();
       setPlaying((p) => !p);
-    } else if (e.key.toLowerCase() === "b" || ((e.ctrlKey || e.metaKey) && e.key === "\\")) {
+    } else if (e.key.toLowerCase() === "b") {
       e.preventDefault();
       split();
     } else if (e.key === "Delete" || e.key === "Backspace") {
@@ -212,7 +212,7 @@ export function TimelineDemo() {
       tabIndex={0}
       onKeyDown={onKeyDown}
       className="overflow-hidden rounded-2xl border border-border-strong bg-[#141417] text-white outline-none focus-visible:ring-2 focus-visible:ring-accent"
-      aria-label="Montaj taymlayni. Probel — ijro, B — kesish, Delete — o‘chirish, Ctrl+Z — bekor qilish, strelkalar — kadrma-kadr."
+      aria-label="Montaj taymlayni. Probel — ijro, Ctrl+B — kesish, Delete — o‘chirish, Ctrl+Z — bekor qilish, strelkalar — kadrma-kadr."
     >
       {/* Monitor */}
       <div className="grid gap-0 border-b border-white/10 md:grid-cols-[1fr_220px]">
@@ -263,13 +263,13 @@ export function TimelineDemo() {
           {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
         </ToolBtn>
         <span className="mx-1 h-5 w-px bg-white/10" />
-        <ToolBtn onClick={split} label="Kesish (B)"><Scissors className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Kesish</span></ToolBtn>
+        <ToolBtn onClick={split} label="Kesish (Ctrl+B)"><Scissors className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Kesish</span></ToolBtn>
         <ToolBtn onClick={remove} label="O‘chirish (Delete)" disabled={!sel}><Trash2 className="h-3.5 w-3.5" /> <span className="hidden sm:inline">O‘chirish</span></ToolBtn>
         <ToolBtn onClick={undo} label="Bekor qilish (Ctrl+Z)" disabled={!history.length}><Undo2 className="h-3.5 w-3.5" /></ToolBtn>
         <span className="mx-1 h-5 w-px bg-white/10" />
         <ToolBtn onClick={() => setRipple((r) => !r)} label="Ripple: o‘chirilgan joyni yopish" active={ripple}>Ripple</ToolBtn>
         <ToolBtn onClick={() => setSnap((s) => !s)} label="Yopishish (snapping)" active={snap}><Magnet className="h-3.5 w-3.5" /></ToolBtn>
-        <span className="ml-auto hidden pr-2 text-white/40 lg:inline">Probel · B · Delete · Ctrl+Z · ← →</span>
+        <span className="ml-auto hidden pr-2 text-white/40 lg:inline">Probel · Ctrl+B · Delete · Ctrl+Z · ← →</span>
       </div>
 
       {/* Taymlayn */}

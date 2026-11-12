@@ -9,6 +9,7 @@ import { submitQuizAction } from "@/app/actions/learning";
 import { cn } from "@/lib/cn";
 import { ProgressRing } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/toast";
+import { Inline } from "./rich-text";
 
 type Q = { id: string; prompt: string; options: string[] };
 type Result = Extract<Awaited<ReturnType<typeof submitQuizAction>>, { ok: true }>;
@@ -93,12 +94,12 @@ export function QuizRunner({ quizId, questions, passingScore, courseHref, nextHr
                 <li key={qq.id} className="rounded-2xl border border-border bg-surface p-5">
                   <p className="flex gap-2.5 font-medium">
                     {ok ? <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-success" /> : <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" />}
-                    <span>{k + 1}. {qq.prompt}</span>
+                    <span>{k + 1}. <Inline text={qq.prompt} /></span>
                   </p>
                   <div className="mt-3 space-y-1.5 pl-7 text-[14px]">
                     {!ok && <p className="text-danger">Sizning javobingiz: {r.chosen >= 0 ? qq.options[r.chosen] : "javob berilmagan"}</p>}
                     <p className="text-success">To‘g‘ri javob: {qq.options[r.correct]}</p>
-                    <p className="pt-1 leading-relaxed text-fg-muted">{r.explanation}</p>
+                    <p className="pt-1 leading-relaxed text-fg-muted"><Inline text={r.explanation} /></p>
                   </div>
                 </li>
               );
@@ -137,7 +138,7 @@ export function QuizRunner({ quizId, questions, passingScore, courseHref, nextHr
             exit={{ opacity: 0, x: dir * -40 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
           >
-            <legend className="mb-6 text-balance text-[22px] font-semibold leading-snug tracking-[-0.015em] sm:text-[26px]">{q.prompt}</legend>
+            <legend className="lesson-prose mb-6 text-balance !text-[22px] font-semibold !leading-snug tracking-[-0.015em] sm:!text-[26px]"><Inline text={q.prompt} /></legend>
             <div className="space-y-2.5" role="radiogroup">
               {q.options.map((opt, k) => {
                 const on = answers[i] === k;

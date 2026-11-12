@@ -32,6 +32,7 @@ self.onmessage = (e) => {
 self.addEventListener('unhandledrejection', (e) => self.postMessage({ kind: 'error', text: 'Promise xatosi: ' + (e.reason && e.reason.message || e.reason) }));
 `;
 
+/* Python — Pyodide (WebAssembly) modul-worker ichida ishlaydi */
 const PY_WORKER = `
 let py = null, loading = null;
 self.onmessage = async (e) => {
@@ -40,8 +41,7 @@ self.onmessage = async (e) => {
     if (!py) {
       if (!loading) {
         self.postMessage({ kind: 'system', text: 'Python muhiti yuklanmoqda (birinchi marta ~10 MB)…' });
-        importScripts(indexURL + 'pyodide.js');
-        loading = loadPyodide({ indexURL });
+        loading = import(indexURL + 'pyodide.mjs').then((m) => m.loadPyodide({ indexURL }));
       }
       py = await loading;
     }
@@ -60,10 +60,11 @@ self.onmessage = async (e) => {
 };
 `;
 
-function makeWorker(src: string) {
+function makeWorker(src: string, module = false) {
   const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
-  const w = new Worker(url);
-  URL.revokeObjectURL(url);
+  const w = new Worker(url, module ? { type: "module" } : undefined);
+  // Skript yuklanib bo‘lgach URL bo‘shatiladi
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
   return w;
 }
 
@@ -169,7 +170,7 @@ export function CodePlayground({
   const runPy = useCallback(() => {
     setLines([]);
     setRunning(true);
-    if (!pyWorkerRef.current) pyWorkerRef.current = makeWorker(PY_WORKER);
+    if (!pyWorkerRef.current) pyWorkerRef.current = makeWorker(PY_WORKER, true);
     const w = pyWorkerRef.current;
     let done = false;
     const killer = setTimeout(() => {
