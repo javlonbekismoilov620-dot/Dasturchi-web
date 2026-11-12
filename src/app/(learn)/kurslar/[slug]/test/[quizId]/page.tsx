@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, History } from "lucide-react";
+import { History } from "lucide-react";
 import { QuizRunner } from "@/components/lesson/quiz-runner";
-import { LogoMark } from "@/components/layout/logo";
-import { ThemeToggle } from "@/components/ui/theme";
+import { QuizShell } from "@/components/lesson/quiz-shell";
 import { requireUser } from "@/lib/server/auth";
 import { getCourseBySlug, getCurriculum, getQuiz } from "@/lib/server/services/content";
 import { listQuizAttempts } from "@/lib/server/services/learning";
@@ -34,18 +32,7 @@ export default async function QuizPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="min-h-dvh">
-      <header className="glass sticky top-0 z-30 border-b border-border">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link href={`/kurslar/${course.slug}`} className="grid h-9 w-9 place-items-center rounded-lg text-fg-muted hover:bg-fg/5 hover:text-fg" aria-label="Kursga qaytish">
-            <ArrowLeft className="h-[18px] w-[18px]" />
-          </Link>
-          <LogoMark size={22} />
-          <p className="min-w-0 flex-1 truncate text-[14px] font-medium">{course.title}</p>
-          <ThemeToggle />
-        </div>
-      </header>
-      <main id="asosiy" className="mx-auto max-w-3xl px-4 pb-24 pt-10">
+    <QuizShell courseSlug={course.slug} courseTitle={course.title}>
         <p className="eyebrow">{quiz.moduleId ? "Modul testi" : "Yakuniy imtihon"}</p>
         <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.03em] sm:text-[36px]">{quiz.title}</h1>
         <p className="mt-2 text-[15.5px] text-fg-muted">{quiz.description}</p>
@@ -63,7 +50,6 @@ export default async function QuizPage({ params }: { params: Params }) {
             nextHref={nextHref}
           />
         </div>
-      </main>
-    </div>
+    </QuizShell>
   );
 }

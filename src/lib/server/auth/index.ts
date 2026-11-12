@@ -2,7 +2,7 @@ import "server-only";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { env, isAdminEmail, isSupabaseEnabled } from "@/lib/server/env";
 import { store } from "@/lib/server/store";
 import type { User } from "@/lib/types";
@@ -102,6 +102,8 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
     const profile = await store().getById("profiles", userId);
     return profile ? await syncRole(profile) : null;
   } catch (err) {
+    // Next.js ichki signallari (dinamik render, redirect) qayta uzatiladi
+    unstable_rethrow(err);
     console.error("[auth] getCurrentUser:", err);
     return null;
   }

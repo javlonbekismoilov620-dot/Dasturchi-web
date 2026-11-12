@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, motion } from "motion/react";
+import { motion } from "motion/react";
 import { ArrowLeft, ArrowRight, Award, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -129,38 +129,30 @@ export function QuizRunner({ quizId, questions, passingScore, courseHref, nextHr
       </div>
 
       <div className="relative min-h-[380px] overflow-hidden">
-        <AnimatePresence mode="wait" custom={dir} initial={false}>
-          <motion.fieldset
-            key={q.id}
-            custom={dir}
-            initial={{ opacity: 0, x: dir * 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: dir * -40 }}
-            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <legend className="lesson-prose mb-6 text-balance !text-[22px] font-semibold !leading-snug tracking-[-0.015em] sm:!text-[26px]"><Inline text={q.prompt} /></legend>
-            <div className="space-y-2.5" role="radiogroup">
-              {q.options.map((opt, k) => {
-                const on = answers[i] === k;
-                return (
-                  <label
-                    key={k}
-                    className={cn(
-                      "flex cursor-pointer items-center gap-4 rounded-xl border p-4 text-[15px] transition-all duration-200",
-                      on ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]" : "border-border bg-surface hover:border-border-strong",
-                    )}
-                  >
-                    <input type="radio" name={q.id} checked={on} onChange={() => choose(k)} className="sr-only" />
-                    <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg border font-mono text-[12px]", on ? "border-accent bg-accent text-accent-fg" : "border-border-strong text-fg-muted")}>
-                      {String.fromCharCode(65 + k)}
-                    </span>
-                    <span className="leading-snug">{opt}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </motion.fieldset>
-        </AnimatePresence>
+        {/* Kalit o‘zgarganda CSS animatsiyasi qayta ishga tushadi (SSR bilan barqaror) */}
+        <fieldset key={q.id} className={dir > 0 ? "quiz-in-next" : "quiz-in-prev"}>
+          <legend className="lesson-prose mb-6 text-balance !text-[22px] font-semibold !leading-snug tracking-[-0.015em] sm:!text-[26px]"><Inline text={q.prompt} /></legend>
+          <div className="space-y-2.5" role="radiogroup">
+            {q.options.map((opt, k) => {
+              const on = answers[i] === k;
+              return (
+                <label
+                  key={k}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-4 rounded-xl border p-4 text-[15px] transition-all duration-200",
+                    on ? "border-accent bg-accent-soft shadow-[0_0_0_1px_var(--accent)]" : "border-border bg-surface hover:border-border-strong",
+                  )}
+                >
+                  <input type="radio" name={q.id} checked={on} onChange={() => choose(k)} className="sr-only" />
+                  <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-lg border font-mono text-[12px]", on ? "border-accent bg-accent text-accent-fg" : "border-border-strong text-fg-muted")}>
+                    {String.fromCharCode(65 + k)}
+                  </span>
+                  <span className="leading-snug">{opt}</span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
       </div>
 
       <div className="mt-8 flex items-center justify-between gap-3 border-t border-border pt-6">
