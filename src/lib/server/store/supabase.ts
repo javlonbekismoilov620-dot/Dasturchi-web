@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { env } from "@/lib/server/env";
+import { supabaseFetch } from "@/lib/supabase-shared";
 import type { Filter, SelectOptions, Store, TableName, Tables } from "./types";
 
 /* ──────────────────────────────────────────────────────────────
@@ -17,7 +18,8 @@ let client: SupabaseClient | null = null;
 export function serviceClient(): SupabaseClient {
   if (!client) {
     client = createClient(env.supabaseUrl, env.supabaseServiceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global: { fetch: supabaseFetch(env.supabaseServiceKey) },
     });
   }
   return client;

@@ -151,14 +151,14 @@ export function StaffReply({ questionId, path }: { questionId: string; path: str
 }
 
 /* ── Media ────────────────────────────────────────────────── */
-export function MediaManager({ items }: { items: MediaAsset[] }) {
+export function MediaManager({ items, maxMb }: { items: MediaAsset[]; maxMb: number }) {
   const { run } = useAdminAction();
   const [copied, setCopied] = useState<string | null>(null);
   const icon = (m: string) => (m.startsWith("image/") ? ImageIcon : m.startsWith("video/") ? Film : FileText);
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3 rounded-2xl border border-dashed border-border-strong p-5">
-        <UploadButton onUploaded={() => run(async () => ({ ok: true as const }))} label="Fayl yuklash (200 MB gacha)" />
+        <UploadButton onUploaded={() => run(async () => ({ ok: true as const }))} label={`Fayl yuklash (${maxMb} MB gacha)`} maxMb={maxMb} />
         <p className="text-[13px] text-fg-muted">Rasm, video (MP4/WebM), audio, PDF, ZIP. Yuklangan faylning manzilini dars yoki kursga qo‘yishingiz mumkin.</p>
       </div>
       {items.length === 0 ? (
@@ -191,7 +191,11 @@ export function MediaManager({ items }: { items: MediaAsset[] }) {
                   {copied === m.id ? <Check className="h-4 w-4 text-success" /> : <Copy className="h-4 w-4" />}
                 </button>
                 <button
-                  onClick={() => window.confirm(`“${m.name}” faylini o‘chirasizmi? Bu faylga havola qilgan darslarda u ishlamay qoladi.`) && run(() => deleteMediaAction(m.id), "Fayl o‘chirildi")}
+                  onClick={() =>
+                    window.confirm(
+                      `“${m.name}” faylini o‘chirasizmi? Bu faylga havola qilgan darslarda u ishlamay qoladi.${m.url.startsWith("http") ? "\n\nEslatma: fayl darhol o‘chiriladi, lekin ommaviy havola CDN keshida taxminan 1 soatgacha ochilib turishi mumkin." : ""}`,
+                    ) && run(() => deleteMediaAction(m.id), "Fayl o‘chirildi")
+                  }
                   className="grid h-8 w-8 place-items-center rounded-md text-fg-subtle hover:bg-fg/5 hover:text-danger"
                   aria-label="O‘chirish"
                 >

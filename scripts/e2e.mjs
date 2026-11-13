@@ -3,7 +3,11 @@
  *   BASE_URL=http://localhost:3000 ADMIN_EMAIL=admin@misol.uz npm run test:e2e
  *
  * Talablar: ishlab turgan server va o'rnatilgan `playwright` paketi.
- * ADMIN_EMAIL berilsa (va u ADMIN_EMAILS ro'yxatida bo'lsa), admin oqimlari ham tekshiriladi. */
+ * ADMIN_EMAIL berilsa (va u ADMIN_EMAILS ro'yxatida bo'lsa), admin oqimlari ham tekshiriladi.
+ * ADMIN2_EMAIL (u ham ADMIN_EMAILS da) berilsa — ADMIN_EMAILS adminini panel orqali pasaytirib
+ * bo'lmasligi tekshiriladi (lokal rejim: ro'yxatdan o'tganda admin bo'ladi).
+ * E2E_SKIP_ACCOUNTS=1 — faqat ommaviy sahifalar (hisob yaratmasdan; masalan, Supabase rejimida
+ * pochta tasdiqlash yoqilganda). Supabase'dagi hisob oqimlari: scripts/test-supabase-security.mjs */
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -17,6 +21,8 @@ try {
 
 const BASE = process.env.BASE_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
+const ADMIN2_EMAIL = process.env.ADMIN2_EMAIL || "";
+const SKIP_ACCOUNTS = process.env.E2E_SKIP_ACCOUNTS === "1";
 const results = [];
 const consoleErrors = [];
 
@@ -80,6 +86,7 @@ await step("Buyruqlar palitrasi (Ctrl+K)", async () => {
   await page.keyboard.press("Escape");
 });
 
+if (!SKIP_ACCOUNTS) {
 console.log("\nTalaba oqimi");
 const email = `talaba${Date.now()}@test.uz`;
 await step("Ro'yxatdan o'tish", () => register(page, "E2E Talaba", email, "parol12345"));
@@ -128,8 +135,22 @@ await step("Talaba admin panelga kira olmaydi", async () => {
   await page.goto(`${BASE}/admin`);
   if (page.url().includes("/admin")) throw new Error("admin ochildi");
 });
+await step("Parol: noto'g'ri joriy parol rad etiladi, to'g'risi bilan almashadi", async () => {
+  await page.goto(`${BASE}/kabinet/profil`);
+  await page.fill("#current", "notogri-parol-1");
+  await page.fill("#next", "yangiParol789");
+  await page.fill("#confirm", "yangiParol789");
+  await page.getByRole("button", { name: "Parolni yangilash" }).click();
+  await page.getByText("Joriy parol noto‘g‘ri.").waitFor({ timeout: 10000 });
+  await page.fill("#current", "parol12345");
+  await page.fill("#next", "yangiParol789");
+  await page.fill("#confirm", "yangiParol789");
+  await page.getByRole("button", { name: "Parolni yangilash" }).click();
+  await page.getByText("Parol yangilandi").waitFor({ timeout: 10000 });
+});
+}
 
-if (ADMIN_EMAIL) {
+if (ADMIN_EMAIL && !SKIP_ACCOUNTS) {
   console.log("\nAdmin oqimi");
   const actx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
   const ap = await actx.newPage();
@@ -163,6 +184,33 @@ if (ADMIN_EMAIL) {
     await ap.getByRole("button", { name: /Kursni o‘chirish/ }).click();
     await ap.waitForURL(/\/admin\/kurslar$/, { timeout: 15000 });
   });
+  await step("Admin o'zini admin huquqidan mahrum qila olmaydi", async () => {
+    await ap.goto(`${BASE}/admin/talabalar?q=${encodeURIComponent(ADMIN_EMAIL)}`);
+    await ap.locator('a[href^="/admin/talabalar/"]').first().click();
+    await ap.getByLabel("Foydalanuvchi roli").selectOption("student");
+    await ap.getByText("O‘zingizni admin huquqidan mahrum qila olmaysiz").waitFor({ timeout: 10000 });
+  });
+  if (ADMIN2_EMAIL) {
+    await step("ADMIN_EMAILS adminini panel orqali pasaytirib bo'lmaydi", async () => {
+      const c2 = await browser.newContext();
+      const p2 = await c2.newPage();
+      await register(p2, "E2E Admin Ikki", ADMIN2_EMAIL, "admin12345").catch(async () => {
+        await p2.goto(`${BASE}/kirish`);
+        await p2.fill("#email", ADMIN2_EMAIL);
+        await p2.fill("#password", "admin12345");
+        await p2.click('button[type="submit"]');
+        await p2.waitForURL(/\/kabinet/, { timeout: 15000 });
+      });
+      await c2.close();
+      await ap.goto(`${BASE}/admin/talabalar?q=${encodeURIComponent(ADMIN2_EMAIL)}`);
+      await ap.locator('a[href^="/admin/talabalar/"]').first().click();
+      await ap.getByLabel("Foydalanuvchi roli").selectOption("student");
+      await ap.getByText("ADMIN_EMAILS orqali admin").waitFor({ timeout: 10000 });
+      await ap.reload();
+      const v = await ap.getByLabel("Foydalanuvchi roli").inputValue();
+      if (v !== "admin") throw new Error(`rol: ${v}`);
+    });
+  }
   await actx.close();
 }
 

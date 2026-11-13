@@ -7,14 +7,10 @@ import { signIn, signOut, signUp } from "@/lib/server/auth";
 import { supabaseAuthClient } from "@/lib/server/auth/supabase-auth";
 import { env, isSupabaseEnabled } from "@/lib/server/env";
 import { rateLimit, resetRateLimit } from "@/lib/server/rate-limit";
+import { safeNext } from "@/lib/safe-next";
 
 export type AuthState = { error?: string; info?: string; fields?: Record<string, string> } | null;
 
-function safeNext(next: unknown): string {
-  const n = typeof next === "string" ? next : "";
-  // Faqat ichki manzillarga yo‘naltirish (ochiq redirect zaifligiga qarshi)
-  return n.startsWith("/") && !n.startsWith("//") && !n.startsWith("/\\") ? n : "/kabinet";
-}
 
 async function clientIp(): Promise<string> {
   const h = await headers();

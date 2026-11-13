@@ -67,15 +67,13 @@ export function ProfileForm({
   );
 }
 
-export function PasswordForm({ supabase }: { supabase: boolean }) {
+export function PasswordForm() {
   const [state, action, pending] = useActionState(changePasswordAction, null);
   return (
     <form action={action} className="space-y-4">
-      {!supabase && (
-        <Field label="Joriy parol" htmlFor="current">
-          <Input id="current" name="current" type="password" autoComplete="current-password" required />
-        </Field>
-      )}
+      <Field label="Joriy parol" htmlFor="current">
+        <Input id="current" name="current" type="password" autoComplete="current-password" required />
+      </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Yangi parol" htmlFor="next" hint="Kamida 8 ta belgi, harf va raqam.">
           <Input id="next" name="next" type="password" autoComplete="new-password" required />

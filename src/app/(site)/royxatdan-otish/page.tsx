@@ -4,12 +4,13 @@ import { Check } from "lucide-react";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { RegisterForm } from "@/components/auth/auth-forms";
 import { authMode, getCurrentUser } from "@/lib/server/auth";
+import { safeNext } from "@/lib/safe-next";
 
 export const metadata: Metadata = { title: "Ro‘yxatdan o‘tish", robots: { index: false } };
 
 export default async function RegisterPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-  const next = sp.next && sp.next.startsWith("/") && !sp.next.startsWith("//") ? sp.next : "/baholash";
+  const next = safeNext(sp.next, "/baholash");
   if (await getCurrentUser()) redirect("/kabinet");
   const mode = authMode();
   return (

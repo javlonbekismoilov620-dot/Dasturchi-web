@@ -1,5 +1,5 @@
 import { PasswordForm, ProfileForm } from "@/components/dashboard/profile-forms";
-import { authMode, requireUser } from "@/lib/server/auth";
+import { requireUser } from "@/lib/server/auth";
 import { listCategories } from "@/lib/server/services/content";
 import { levelName } from "@/lib/text";
 import { ButtonLink } from "@/components/ui/button";
@@ -22,7 +22,7 @@ export default async function ProfilePage() {
         <section>
           <h2 className="mb-4 text-[20px] font-semibold tracking-tight">Xavfsizlik</h2>
           <div className="rounded-2xl border border-border bg-surface p-6">
-            <PasswordForm supabase={authMode().provider === "supabase"} />
+            <PasswordForm />
           </div>
         </section>
       </div>

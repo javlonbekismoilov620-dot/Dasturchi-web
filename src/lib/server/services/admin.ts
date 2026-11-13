@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { isSupabaseEnabled } from "@/lib/server/env";
+import { isSupabaseEnabled, maxUploadMb } from "@/lib/server/env";
 import { store } from "@/lib/server/store";
 import { dataDir } from "@/lib/server/store/local";
 import { serviceClient } from "@/lib/server/store/supabase";
@@ -351,14 +351,15 @@ export async function setCertificateRevoked(id: string, revoked: boolean) {
 /* ── Media ────────────────────────────────────────────────── */
 
 const ALLOWED_MIME = /^(image\/(png|jpe?g|webp|gif|svg\+xml|avif)|video\/(mp4|webm|quicktime)|audio\/(mpeg|wav|ogg|mp4)|application\/(pdf|zip|x-zip-compressed|json)|text\/(plain|csv|markdown)|model\/gltf-binary|application\/octet-stream)$/;
-export const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
+
 
 export function uploadsDir() {
   return path.join(dataDir(), "uploads");
 }
 
 export async function saveUpload(file: File, uploadedBy: string): Promise<MediaAsset> {
-  if (file.size > MAX_UPLOAD_BYTES) throw new Error("Fayl hajmi 200 MB dan oshmasligi kerak");
+  const limitMb = maxUploadMb();
+  if (file.size > limitMb * 1024 * 1024) throw new Error(`Fayl hajmi ${limitMb} MB dan oshmasligi kerak`);
   const mime = file.type || "application/octet-stream";
   if (!ALLOWED_MIME.test(mime)) throw new Error(`Bu turdagi fayl qabul qilinmaydi (${mime})`);
   const id = randomUUID();

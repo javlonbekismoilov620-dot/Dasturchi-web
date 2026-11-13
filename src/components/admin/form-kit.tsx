@@ -109,7 +109,7 @@ export function IconBtn({ children, label, onClick, disabled, danger }: { childr
 }
 
 /** Faylni yuklash va URL qaytarish */
-export function UploadButton({ accept, onUploaded, label = "Fayl yuklash" }: { accept?: string; onUploaded: (asset: MediaAsset) => void; label?: string }) {
+export function UploadButton({ accept, onUploaded, label = "Fayl yuklash", maxMb }: { accept?: string; onUploaded: (asset: MediaAsset) => void; label?: string; maxMb?: number }) {
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const { push } = useToast();
@@ -123,6 +123,11 @@ export function UploadButton({ accept, onUploaded, label = "Fayl yuklash" }: { a
         onChange={async (e) => {
           const file = e.target.files?.[0];
           if (!file) return;
+          if (maxMb && file.size > maxMb * 1024 * 1024) {
+            e.target.value = "";
+            push({ kind: "error", title: "Yuklanmadi", description: `Fayl hajmi ${maxMb} MB dan oshmasligi kerak` });
+            return;
+          }
           setBusy(true);
           const fd = new FormData();
           fd.append("file", file);

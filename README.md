@@ -16,7 +16,7 @@
 | Tayyorlanayotgan kurslar | **27 ta** — o‘quv dasturi (modul va dars mavzulari) e’lon qilingan, darslar platformada **“Tayyorlanmoqda”** deb aniq belgilangan |
 | Video darslar | Video pleyer to‘liq ishlaydi (MP4/WebM, YouTube, Vimeo, ko‘rish joyini eslab qolish), lekin **hozircha video yuklanmagan** — admin panel orqali qo‘shiladi |
 | AI ustoz | Modul tayyor, lekin **`ANTHROPIC_API_KEY` berilmaguncha o‘chiq** va interfeys buni ochiq aytadi |
-| Ma’lumotlar ombori | Lokal JSON drayveri to‘liq sinovdan o‘tgan; Supabase drayveri, SQL sxema va RLS yozilgan, lekin **jonli Supabase loyihasida sinalmagan** |
+| Ma’lumotlar ombori | Lokal JSON drayveri to‘liq sinovdan o‘tgan. **Supabase jonli loyihaga ulangan** (Frankfurt): sxema, RLS (61 ta avtomatik test), Storage, seed va ADMIN_EMAILS sinovdan o‘tgan. Kabinet va admin panelning *sessiya bilan* ishlaydigan oqimlari Supabase’da hali sinalmagan (sabab: [docs/supabase.md](docs/supabase.md#sinov-holati)) |
 
 Platformada soxta statistika, soxta sharhlar yoki ishlamaydigan tugmalar yo‘q: bosh sahifadagi barcha raqamlar ma’lumotlar bazasidan hisoblanadi, kabinetdagi “namuna” bloklari esa aniq belgilangan.
 
@@ -81,9 +81,12 @@ Birinchi ishga tushirishda `.data/db.json` avtomatik yaratiladi va `content/` pa
 | `npm run dev` | Ishlab chiqish serveri |
 | `npm run build` / `npm start` | Ishlab chiqarish (production) yig‘ish va ishga tushirish |
 | `npm run lint` · `npm run typecheck` | ESLint va TypeScript tekshiruvi |
-| `npm run seed` | `content/` dagi kontentni bazaga qo‘shish/yangilash (admin qo‘shgan boshqa kurslar saqlanadi) |
-| `npm run seed -- --reset` | Kontent jadvallarini seed bilan to‘liq almashtirish (foydalanuvchi ma’lumotlariga tegilmaydi) |
+| `npm run seed` | `content/` dagi **yo‘q** yozuvlarni qo‘shadi. Mavjud qatorlar (admin tahrirlari ham) o‘zgarmaydi, hech narsa o‘chirilmaydi |
+| `npm run seed -- --update` | Seed’dagi id’li qatorlarni seed matni bilan qayta yozadi (shu qatorlardagi admin tahrirlari yo‘qoladi). Hech narsa o‘chirilmaydi |
+| `npm run seed -- --reset` | Faqat lokal rejim: kontent jadvallarini to‘liq almashtiradi. Supabase’da rad etiladi |
 | `npm run test:e2e` | Asosiy oqimlarni tekshiruvchi tutun (smoke) testi — `playwright` o‘rnatilgan bo‘lishi va server ishlab turishi kerak |
+| `npm run test:security` | Supabase rejimi: ADMIN_EMAILS, email tasdiqlash, ochiq redirect, Storage va sertifikat tekshiruvi ([docs/supabase.md](docs/supabase.md#testlar)) |
+| `supabase/tests/rls_test.sql` | RLS va grant’lar testi — Supabase SQL Editor’da bajariladi, hammasi ROLLBACK qilinadi |
 
 Seed’dan keyin dev serverni qayta ishga tushiring — lokal drayver ma’lumotlarni xotirada saqlaydi.
 
@@ -97,28 +100,32 @@ To‘liq ro‘yxat va izohlar: [`.env.example`](.env.example).
 | --- | --- | --- |
 | `ADMIN_EMAILS` | Ha (admin uchun) | Vergul bilan ajratilgan pochtalar |
 | `NEXT_PUBLIC_SITE_URL` | Production’da | Sitemap va OAuth qaytish manzili |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Yo‘q | Uchalasi berilsa — Supabase rejimi |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | Yo‘q | Uchalasi berilsa — Supabase rejimi. Eski nomlar ham ishlaydi: `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` |
+| `MEDIA_MAX_UPLOAD_MB` | Yo‘q | Bitta fayl chegarasi (standart: Supabase’da 50, lokal 200) |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | Yo‘q | `true` — Google orqali kirish tugmasi (faqat Supabase rejimida) |
 | `ANTHROPIC_API_KEY`, `AI_MODEL` | Yo‘q | AI ustozni yoqadi (standart model: `claude-opus-5-5`) |
 | `DATA_DIR` | Yo‘q | Lokal ombor papkasi (standart `./.data`) |
 | `NEXT_PUBLIC_PYODIDE_URL` | Yo‘q | Python mashqlari uchun Pyodide manzili (standart: jsDelivr CDN) |
 
-**Maxfiy kalitlar** (`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`) faqat `server-only` modullarda o‘qiladi va brauzerga hech qachon yuborilmaydi.
+**Maxfiy kalitlar** (`SUPABASE_SECRET_KEY` / `SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY`) faqat serverda o‘qiladi va brauzerga hech qachon yuborilmaydi (yig‘ilgan `.next/static` ichida tekshirilgan).
 
 ---
 
 ## Supabase’ni ulash
 
+To‘liq qo‘llanma: **[docs/supabase.md](docs/supabase.md)** (kalitlar, Auth sozlamalari, SMTP, Storage, ADMIN_EMAILS, testlar).
+
+Qisqacha:
+
 1. supabase.com’da loyiha yarating.
-2. **SQL Editor**’da [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) faylini to‘liq bajaring — jadvallar, indekslar, RLS siyosatlari, yangi foydalanuvchi uchun profil triggeri va `media` storage bucket yaratiladi.
-3. **Project Settings → API**’dan URL, `anon` va `service_role` kalitlarini `.env.local` ga yozing.
-4. Kontentni yuklang: `npm run seed` (skript Supabase sozlanganini avtomatik aniqlaydi).
-5. **Authentication → URL Configuration**’da Site URL’ni va `…/auth/callback` qaytish manzilini qo‘shing.
-6. Google orqali kirish uchun: **Authentication → Providers → Google** ni yoqing va `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true` qo‘ying.
+2. **SQL Editor**’da [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql) ni to‘liq bajaring. Skript idempotent: qayta bajarish xavfsiz, u hech qachon jadval yoki qatorlarni o‘chirmaydi.
+3. **Project Settings → API Keys**’dan URL, **publishable** va **secret** kalitlarni `.env.local` ga yozing.
+4. Kontentni yuklang: `npm run seed` (faqat yo‘q yozuvlarni qo‘shadi).
+5. **Authentication → URL Configuration**: Site URL va `https://sizning-domen/**` qaytish manzili. **Confirm email** yoqilgan bo‘lishi shart.
+6. Haqiqiy foydalanuvchilarga xat yuborish uchun **custom SMTP** sozlang (standart pochta xizmati faqat loyiha jamoasi a’zolariga xat yuboradi).
+7. SQL Editor’da [`supabase/tests/rls_test.sql`](supabase/tests/rls_test.sql) ni bajaring — barcha qatorlar `ok = true` bo‘lishi kerak.
 
-**Xavfsizlik modeli:** Next.js serveri service-role kaliti bilan ishlaydi va har bir amalda ruxsatni o‘zi tekshiradi (talaba faqat o‘z ma’lumotlarini o‘zgartiradi, admin amallari `role = 'admin'` ni talab qiladi). RLS esa `anon` kalit orqali brauzerdan to‘g‘ridan-to‘g‘ri kirishga qarshi ikkinchi himoya qatlami: test javoblari ochiq o‘qilmaydi, test natijalari va sertifikatlarni faqat server yozadi, foydalanuvchi o‘z rolini o‘zgartira olmaydi.
-
-> Eslatma: Supabase drayveri va SQL sxemasi yozilgan va typecheck’dan o‘tgan, lekin jonli Supabase loyihasida sinab ko‘rilmagan. Birinchi ulashda asosiy oqimlarni (ro‘yxatdan o‘tish, dars yakunlash, test, admin tahriri) tekshirib chiqing.
+**Xavfsizlik modeli:** Next.js serveri secret kalit bilan ishlaydi va har bir amalda ruxsatni o‘zi tekshiradi. RLS va minimal grant’lar esa publishable kalit bilan brauzerdan to‘g‘ridan-to‘g‘ri kirishga qarshi ikkinchi himoya qatlami: test javoblari ochiq o‘qilmaydi; progress, test natijalari va sertifikatlarni faqat server yozadi; foydalanuvchi o‘z rolini o‘zgartira olmaydi; `anon` rolida faqat ochiq katalogni o‘qish huquqi bor.
 
 ---
 
@@ -163,10 +170,12 @@ src/
 ## Xavfsizlik
 
 - Parollar `scrypt` bilan xeshlanadi; sessiya tokeni tasodifiy 256 bit, bazada faqat SHA-256 xeshi saqlanadi; cookie `HttpOnly`, `SameSite=Lax`, production’da `Secure`
-- Parol o‘zgartirilganda boshqa qurilmalardagi sessiyalar yopiladi
+- Parol o‘zgartirish joriy parolni talab qiladi (ikkala rejimda); o‘zgartirilganda boshqa qurilmalardagi sessiyalar yopiladi
+- **ADMIN_EMAILS**: Supabase rejimida admin huquqi faqat pochtaga egalik isbotlangandan keyin beriladi (`email_confirmed_at` + loyihada avtomatik tasdiqlash o‘chiq; tekshirib bo‘lmasa — huquq berilmaydi). Ro‘yxatdagi admin’ni panel orqali pasaytirib bo‘lmaydi. Lokal rejimda pochta tasdiqlanmaydi — admin hisobini birinchi bo‘lib o‘zingiz yarating
+- Rol hech qachon ro‘yxatdan o‘tish metadata’sidan olinmaydi; `role` ustunini faqat server o‘zgartiradi (ustun darajasidagi grant)
 - Login, ro‘yxatdan o‘tish, savollar, testlar va AI uchun tezlik cheklovi
 - Barcha mutatsiyalar Server Actions orqali (Next.js Origin tekshiruvi) va zod bilan tekshiriladi
-- Ochiq redirect’dan himoya (`next` parametri faqat ichki yo‘l)
+- Ochiq redirect’dan himoya (`next` parametri faqat ichki yo‘l; `//`, `/\`, boshqaruv belgilari rad etiladi)
 - Foydalanuvchi kodi sandbox’dagi iframe yoki Web Worker’da bajariladi
 - Yuklangan fayllar MIME bo‘yicha cheklangan, `nosniff` va SVG uchun qat’iy CSP bilan uzatiladi
 - Xavfsizlik sarlavhalari: `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`

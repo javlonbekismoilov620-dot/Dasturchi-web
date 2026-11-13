@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getCurrentUser } from "@/lib/server/auth";
+import { getCurrentUser, isBootstrapAdmin } from "@/lib/server/auth";
 import {
   createCourse,
   createLesson,
@@ -362,8 +362,14 @@ export async function deleteCategoryAction(id: string): Promise<Result> {
 export async function setRoleAction(userId: string, role: "student" | "admin"): Promise<Result> {
   try {
     const me = await admin();
-    if (me.id === userId && role !== "admin") throw new Error("O‘zingizni admin huquqidan mahrum qila olmaysiz");
-    await setUserRole(userId, z.enum(["student", "admin"]).parse(role));
+    const nextRole = z.enum(["student", "admin"]).parse(role);
+    if (me.id === userId && nextRole !== "admin") throw new Error("O‘zingizni admin huquqidan mahrum qila olmaysiz");
+    const target = await store().getById("profiles", z.string().min(1).max(64).parse(userId));
+    if (!target) throw new Error("Foydalanuvchi topilmadi");
+    if (nextRole !== "admin" && isBootstrapAdmin(target.email)) {
+      throw new Error("Bu foydalanuvchi ADMIN_EMAILS orqali admin. Avval uni server sozlamalaridagi ro‘yxatdan olib tashlang.");
+    }
+    await setUserRole(userId, nextRole);
     refreshAll();
     return { ok: true };
   } catch (e) {
